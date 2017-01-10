@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from .base import AbstractBaseRole
 from django.db import models
 from django.contrib.auth.models import Group
 
@@ -8,7 +9,7 @@ class RoleManage(models.Manager):
         group, created = Group.objects.get_or_create(name=name)
         if permissions:
             group.permissions.set(permissions)
-        role = self.model(group=group, **extra_fields)
+        role = self.model(group=group, name=name, **extra_fields)
         role.save(using=self._db)
 
         return role
@@ -16,40 +17,22 @@ class RoleManage(models.Manager):
     def get_queryset(self):
         return super(RoleManage, self).get_queryset().prefetch_related('group')
 
+    # def get(self, *args, **kwargs):
+    #     name = kwargs.pop('name', None)
+    #     if name:
+    #         kwargs['group__name'] = name
 
-class Role(models.Model):
-    group = models.OneToOneField(Group, models.CASCADE, primary_key=True)
-    is_active = models.BooleanField('状态', default=True)
-    create_time = models.DateTimeField('创建时间', auto_now_add=True)
+    #     return super(RoleManage, self).get(*args, **kwargs)
 
+    # def get_or_create(self, defaults=None, **kwargs):
+    #     lookup, params = self._extract_model_params(defaults, **kwargs)
+    #     self._for_write = True
+    #     try:
+    #         return self.get(**lookup), False
+    #     except self.model.DoesNotExist:
+    #         return self._create_object_from_params(lookup, params)
+    #     return super(RoleManage, self).get_or_create(defaults, **kwargs)
+
+
+class Role(AbstractBaseRole):
     objects = RoleManage()
-
-    class Meta:
-        db_table = 'auth_role'
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def id(self):
-        return self.group.id
-
-    @property
-    def name(self):
-        return self.group.name
-
-    @name.setter
-    def name(self, value):
-        self.group.name = value
-
-    @property
-    def permissions(self):
-        return self.group.permissions
-
-    def assign_role_to_user(self, user):
-        user = getattr(user, 'user', None) or user
-        self.group.user_set.add(user)
-
-    def save(self, *args, **kwargs):
-        self.group.save()
-        super(Role, self).save(*args, **kwargs)
