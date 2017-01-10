@@ -35,6 +35,9 @@ class AbstractBaseRole(models.Model):
         user = getattr(user, 'user', None) or user
         self.group.user_set.add(user)
 
+    def as_group(self):
+        return self.group
+
     def save(self, *args, **kwargs):
         self.group.save()
         super(AbstractBaseRole, self).save(*args, **kwargs)

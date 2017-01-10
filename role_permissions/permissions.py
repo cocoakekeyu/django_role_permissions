@@ -5,17 +5,17 @@ from .models import Role
 from .shortcut import get_or_create_permissions
 
 
-registerd_roles = {}
+registerd_permissons = {}
 
 
-class AbstractRoleMetaclass(type):
+class AbstractPermissionMetaclass(type):
     def __new__(cls, name, bases, dct):
-        role_class = type.__new__(cls, name, bases, dct)
-        registerd_roles[role_class.get_name()] = role_class
-        return role_class
+        permission_class = type.__new__(cls, name, bases, dct)
+        registerd_permissons[permission_class.get_name()] = permission_class
+        return permission_class
 
 
-class AbstractRole(object):
+class AbstractPermisson(object):
 
     __metaclass__ = AbstractRoleMetaclass
 

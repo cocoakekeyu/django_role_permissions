@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+
 from .models import Role
-from django.apps import apps as django_apps
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from .__init__ import get_role_model
 
 
 # Role operate
+
 
 def assign_roles(user, roles):
     """
@@ -65,14 +68,50 @@ def get_user_role(user):
     return roles[0] if roles else None
 
 
-def get_role_model():
-    """
-    Returns the Role model that is active in this project.
-    """
+# Permissions
+
+
+def get_all_permissions():
+    role_ct = ContentType.objects.get_for_model(get_role_model())
+    return list(Permission.objects.filter(content_type=role_ct))
+
+
+def get_permission(permission_name):
+    role_ct = ContentType.objects.get_for_model(get_role_model())
     try:
-        return django_apps.get_model(settings.AUTH_ROLE_MODEL)
-    except ValueError:
-        raise ImproperlyConfigured(
-            "AUTH_USER_MODEL must be of the form 'app_label.model_name'")
-    except (LookupError, AttributeError):
-        return Role
+        permission = Permission.objects.get(
+            content_type=role_ct, codename=permission_name)
+    except ObjectDoesNotExist:
+        raise ObjectDoesNotExist('未找到对应的权限')
+    return permission
+
+
+def get_permissions(permission_names):
+    role_ct = ContentType.objects.get_for_model(get_role_model())
+    permissions = Permission.objects.filter(
+        content_type=role_ct, codename__in=permission_names)
+    if len(permissions) < len(permission_names):
+        raise ObjectDoesNotExist('未找到对应的权限')
+
+
+def get_or_create_permission(permission_name):
+    role_ct = ContentType.objects.get_for_model(get_role_model())
+    permission, created = Permission.objects.get_or_create(
+        content_type=role_ct,
+        codename=permission_name)
+    return permission
+
+
+def get_or_create_permissions(permission_names):
+    role_ct = ContentType.objects.get_for_model(get_role_model())
+    permissions = list(Permission.objects.filter(
+        content_type=role_ct, codename__in=permission_names).all())
+
+    if len(permissions) != len(permission_names):
+        for permission_name in permission_names:
+            permission, created = Permission.objects.get_or_create(
+                content_type=role_ct, codename=permission_name)
+            if created:
+                permissions.append(permission)
+
+    return permissions
