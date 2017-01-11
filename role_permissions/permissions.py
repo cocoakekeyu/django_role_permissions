@@ -3,7 +3,7 @@ from .abstract import AbstractPermisson
 
 
 class UserRelate(AbstractPermisson):
-    group = '用户相关'
+    category = '用户相关'
     perms = [
         {
             'codename': 'editor_user',

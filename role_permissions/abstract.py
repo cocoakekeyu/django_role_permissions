@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+from six import add_metaclass
+
+from django.core.exceptions import ObjectDoesNotExist
+
 from .shortcut import get_or_create_permissions, get_or_create_permission
 from .exceptions import InitPermissionError
 from .utils import get_role_model
-from django.core.exceptions import ObjectDoesNotExist
 
 
 registerd_roles = {}
@@ -11,13 +14,12 @@ registerd_roles = {}
 class AbstractRoleMetaclass(type):
     def __new__(cls, name, bases, dct):
         role_class = type.__new__(cls, name, bases, dct)
-        registerd_roles[role_class.get_name()] = role_class
+        registerd_roles[role_class.__name__] = role_class
         return role_class
 
 
+@add_metaclass(AbstractRoleMetaclass)
 class AbstractRole(object):
-
-    __metaclass__ = AbstractRoleMetaclass
 
     def __new__(cls, *args, **kwargs):
         if hasattr(cls, 'name'):
@@ -42,12 +44,13 @@ class AbstractRole(object):
 class AbstractPermissonMetaclass(type):
     def __new__(cls, name, bases, dct):
         permission_class = type.__new__(cls, name, bases, dct)
-        category = dct.get('category', name)
-        if 'perms' not in dct:
-            raise InitPermissionError('perms must be exists')
-        perms = dct['perms']
-        cls._create_permissions(perms, category)
-        print('test')
+        if name != 'AbstractPermisson':
+            category = dct.get('category', name)
+            if 'perms' not in dct:
+                raise InitPermissionError('perms must be exists')
+            perms = dct['perms']
+            cls._create_permissions(perms, category)
+
         return permission_class
 
     @classmethod
@@ -62,6 +65,6 @@ class AbstractPermissonMetaclass(type):
         pass
 
 
+@add_metaclass(AbstractPermissonMetaclass)
 class AbstractPermisson(object):
-
-    __metaclass__ = AbstractPermissonMetaclass
+    pass

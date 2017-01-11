@@ -45,8 +45,6 @@ class RoleOutputSerializer(serializers.ModelSerializer):
     """
     角色序列化器
     """
-    id = serializers.IntegerField(
-        label='ID', source='group_id', read_only=True)
     name = serializers.CharField(label='名称', max_length=255)
     permissions = serializers.ListField(
         child=serializers.CharField(max_length=255)
