@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .base import AbstractBaseRole
 from django.db import models
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 
 
 class RoleManage(models.Manager):
@@ -20,3 +20,9 @@ class RoleManage(models.Manager):
 
 class Role(AbstractBaseRole):
     objects = RoleManage()
+
+
+class PermissionGroup(models.Model):
+    permission = models.OneToOneField(
+        Permission, models.CASCADE, primary_key=True, related_name='category')
+    name = models.CharField('权限分组', max_length=80, default='default')

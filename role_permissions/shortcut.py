@@ -3,8 +3,8 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Role
-from .__init__ import get_role_model
+from .models import PermissionGroup
+from .utils import get_role_model
 
 
 # Role operate
@@ -56,7 +56,7 @@ def get_user_roles(user):
     获取用户所有角色
     """
     user = getattr(user, 'user', None) or user
-    roles = Role.objects.filter(group__in=user.groups.all())
+    roles = get_role_model().objects.filter(group__in=user.groups.all())
     return list(roles)
 
 
@@ -94,11 +94,18 @@ def get_permissions(permission_names):
         raise ObjectDoesNotExist('未找到对应的权限')
 
 
-def get_or_create_permission(permission_name):
+def get_or_create_permission(codename, name=None, category='default'):
     role_ct = ContentType.objects.get_for_model(get_role_model())
+    defaults = {}
+    name = name or codename
+    defaults.update({'name': name})
     permission, created = Permission.objects.get_or_create(
         content_type=role_ct,
-        codename=permission_name)
+        codename=codename,
+        defaults=defaults)
+    if created:
+        PermissionGroup.objects.create(permission=permission, name=category)
+
     return permission
 
 
@@ -110,8 +117,11 @@ def get_or_create_permissions(permission_names):
     if len(permissions) != len(permission_names):
         for permission_name in permission_names:
             permission, created = Permission.objects.get_or_create(
-                content_type=role_ct, codename=permission_name)
+                content_type=role_ct,
+                codename=permission_name,
+                defaults={'name': permission_name})
             if created:
                 permissions.append(permission)
+                PermissionGroup.objects.create(permission=permission)
 
     return permissions

@@ -19,14 +19,6 @@ class AbstractBaseRole(models.Model):
     def id(self):
         return self.group.id
 
-    # @property
-    # def name(self):
-    #     return self.group.name
-
-    # @name.setter
-    # def name(self, value):
-    #     self.group.name = value
-
     @property
     def permissions(self):
         return self.group.permissions
