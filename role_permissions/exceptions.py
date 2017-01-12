@@ -8,3 +8,7 @@ class InitPermissionError(Exception):
 
 class RoleDoesNotExist(Exception):
     pass
+
+
+class RoleDoesNotRegister(Exception):
+    pass

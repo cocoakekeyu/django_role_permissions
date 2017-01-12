@@ -4,6 +4,10 @@ from django.apps import AppConfig
 from django.conf import settings
 
 
+class SimpleConfig(AppConfig):
+    name = 'role_permissions'
+
+
 class RolePermissionsConfig(AppConfig):
     name = 'role_permissions'
 

@@ -6,39 +6,39 @@ from django.core.exceptions import ObjectDoesNotExist
 from .shortcut import get_or_create_permissions, get_or_create_permission
 from .exceptions import InitPermissionError
 from .utils import get_role_model
+from .exceptions import RoleDoesNotRegister
 
 
-registerd_roles = {}
+registered_roles = {}
 
 
-class AbstractRoleMetaclass(type):
-    def __new__(cls, name, bases, dct):
-        role_class = type.__new__(cls, name, bases, dct)
-        registerd_roles[role_class.__name__] = role_class
-        return role_class
-
-
-@add_metaclass(AbstractRoleMetaclass)
 class AbstractRole(object):
 
     def __new__(cls, *args, **kwargs):
-        if hasattr(cls, 'name'):
-            name = cls.name
-        else:
-            name = cls.__name__
-
-        extra = {}
-
-        if hasattr(cls, 'permissions'):
-            permissions = get_or_create_permissions(cls.permissions)
-            extra['permissions'] = permissions
-
         try:
-            role = get_role_model().objects.get(name=name)
-        except ObjectDoesNotExist:
+            role = cls.get_registered_role()
+        except RoleDoesNotRegister:
+            if hasattr(cls, 'name'):
+                name = cls.name
+            else:
+                name = cls.__name__
+            extra = {}
+            if hasattr(cls, 'permissions'):
+                permissions = get_or_create_permissions(cls.permissions)
+                extra['permissions'] = permissions
+
             role = get_role_model().objects.create(name=name, **extra)
+            registered_roles[cls.__name__] = role
 
         return role
+
+    @classmethod
+    def get_registered_role(cls):
+        name = cls.__name__
+        if name in registered_roles:
+            return registered_roles[name]
+        else:
+            raise RoleDoesNotRegister()
 
 
 class AbstractPermissonMetaclass(type):

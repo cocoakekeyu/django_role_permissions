@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import inspect
+
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
@@ -43,9 +45,44 @@ def remove_roles(user):
 
 
 def has_role(user, role):
-    if user in role.group.user_set:
+    if user and user.is_superuser:
         return True
-    return False
+
+    user_roles = get_user_roles(user)
+
+    if not user_roles:
+        return False
+
+    if inspect.isclass(role):
+        role = role.get_registered_role()
+    elif not isinstance(role, get_role_model()):
+        role = get_role_model().objects.get(name=role)
+
+    return role in user_roles
+
+
+def has_roles(user, roles):
+
+    if user and user.is_superuser:
+        return True
+
+    user_roles = get_user_roles(user)
+
+    if not user_roles:
+        return False
+
+    if not isinstance(roles, list):
+        roles = [roles]
+
+    normalized_roles = []
+    for role in roles:
+        if inspect.isclass(role):
+            role = role.get_registered_role()
+        elif not isinstance(role, get_role_model()):
+            role = get_role_model().objects.get(name=role)
+        normalized_roles.append(role)
+
+    return set(normalized_roles).issubset(user_roles)
 
 
 def get_user_roles(user):
