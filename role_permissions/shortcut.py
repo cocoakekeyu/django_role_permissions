@@ -7,6 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .models import PermissionGroup
 from .utils import get_role_model
+from .base import AbstractBaseRole
+from role_permissions import abstract
 
 
 # Role operate
@@ -25,6 +27,8 @@ def add_role(user, role):
     """
     给用户添加一个角色
     """
+    if issubclass(role, AbstractBaseRole):
+        role = abstract.registered_roles[role.__name__]
     if user in role.group.user_set:
         return
     role.assign_role_to_user(user)
@@ -106,7 +110,8 @@ def get_user_role(user):
 
 def get_all_permissions():
     role_ct = ContentType.objects.get_for_model(get_role_model())
-    return list(Permission.objects.filter(content_type=role_ct))
+    return list(Permission.objects.filter(
+        content_type=role_ct).exclude(name__startswith='Can'))
 
 
 def get_permission(permission_name):
@@ -125,6 +130,13 @@ def get_permissions(permission_names):
         content_type=role_ct, codename__in=permission_names)
     if len(permissions) < len(permission_names):
         raise ObjectDoesNotExist('未找到对应的权限')
+
+
+def get_user_permissions(user):
+    role_ct = ContentType.objects.get_for_model(get_role_model())
+    permissions = Permission.objects.filter(
+        content_type=role_ct, group__in=user.groups.all())
+    return permissions
 
 
 def get_or_create_permission(codename, name=None, category='default'):

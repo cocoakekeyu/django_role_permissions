@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from django.contrib.auth.models import Permission
 
 from .models import Role
 from .shortcut import get_permissions
@@ -53,3 +54,15 @@ class RoleOutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         exclude = ('group',)
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    """
+    角色权限序列化器
+    """
+    category = serializers.CharField(
+        label='权限组', max_length=32, required=False, soure='category.name')
+
+    class Meta:
+        model = Permission
+        fields = '__all__'

@@ -62,6 +62,7 @@ class AbstractPermissonMetaclass(type):
 
     @classmethod
     def _check_perms_config(cls, perms):
+        # 检查配置是否正确
         pass
 
 
