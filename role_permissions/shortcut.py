@@ -7,8 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .models import PermissionGroup
 from .utils import get_role_model
-from .base import AbstractBaseRole
-from role_permissions import abstract
+from role_permissions.abstract import AbstractRole
 
 
 # Role operate
@@ -27,9 +26,9 @@ def add_role(user, role):
     """
     给用户添加一个角色
     """
-    if issubclass(role, AbstractBaseRole):
-        role = abstract.registered_roles[role.__name__]
-    if user in role.group.user_set:
+    if issubclass(role, AbstractRole):
+        role = role.get_registered_role()
+    if user in role.group.user_set.all():
         return
     role.assign_role_to_user(user)
 
@@ -136,37 +135,4 @@ def get_user_permissions(user):
     role_ct = ContentType.objects.get_for_model(get_role_model())
     permissions = Permission.objects.filter(
         content_type=role_ct, group__in=user.groups.all())
-    return permissions
-
-
-def get_or_create_permission(codename, name=None, category='default'):
-    role_ct = ContentType.objects.get_for_model(get_role_model())
-    defaults = {}
-    name = name or codename
-    defaults.update({'name': name})
-    permission, created = Permission.objects.get_or_create(
-        content_type=role_ct,
-        codename=codename,
-        defaults=defaults)
-    if created:
-        PermissionGroup.objects.create(permission=permission, name=category)
-
-    return permission
-
-
-def get_or_create_permissions(permission_names):
-    role_ct = ContentType.objects.get_for_model(get_role_model())
-    permissions = list(Permission.objects.filter(
-        content_type=role_ct, codename__in=permission_names).all())
-
-    if len(permissions) != len(permission_names):
-        for permission_name in permission_names:
-            permission, created = Permission.objects.get_or_create(
-                content_type=role_ct,
-                codename=permission_name,
-                defaults={'name': permission_name})
-            if created:
-                permissions.append(permission)
-                PermissionGroup.objects.create(permission=permission)
-
     return permissions

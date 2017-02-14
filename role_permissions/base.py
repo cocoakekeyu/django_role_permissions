@@ -20,7 +20,8 @@ class AbstractBaseRole(models.Model):
         return self.group.permissions
 
     def assign_role_to_user(self, user):
-        self.group.user_set.add(user)
+        # self.group.user_set.add(user)
+        user.groups.add(self.group)
 
     def as_group(self):
         return self.group
