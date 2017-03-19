@@ -57,12 +57,12 @@ class RoleOutputSerializer(serializers.ModelSerializer):
 
 
 class PermissionSerializer(serializers.ModelSerializer):
-    """
-    角色权限序列化器
-    """
-    category = serializers.CharField(
-        label='权限组', max_length=32, required=False, soure='category.name')
 
     class Meta:
         model = Permission
         fields = '__all__'
+
+
+class PermissionGroupSerializer(serializers.Serializer):
+    category = serializers.CharField(label='分组', max_length=16)
+    permissions = PermissionSerializer(many=True)

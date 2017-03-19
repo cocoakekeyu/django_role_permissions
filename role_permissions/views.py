@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
+from operator import attrgetter
+import itertools
+
 from django.views import View
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from role_permissions import get_role_model
 from .shortcut import get_all_permissions, get_user_permissions
-from .serializer import PermissionSerializer
+from .serializer import PermissionSerializer, PermissionGroupSerializer
 
 
 class PermissionView(APIView):
@@ -14,8 +20,19 @@ class PermissionView(APIView):
         """
         获取所有角色权限
         """
-        permissions = get_all_permissions()
-        serializer = PermissionSerializer(permissions, many=True)
+        role_ct = ContentType.objects.get_for_model(get_role_model())
+        permissions = Permission.objects.filter(content_type=role_ct).exclude(
+            name__startswith='Can').prefetch_related('category')
+        permissions = list(permissions)
+        permissions.sort(key=attrgetter('category.name'))
+        permission_groups = []
+        for k, v in itertools.groupby(permissions, key=attrgetter('category.name')):
+            permission_group = {}
+            permission_group['category'] = k
+            permission_group['permissions'] = list(v)
+            permission_groups.append(permission_group)
+
+        serializer = PermissionGroupSerializer(permission_groups, many=True)
         return Response(serializer.data)
 
 

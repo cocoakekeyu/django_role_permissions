@@ -30,9 +30,8 @@ def get_or_create_permission(codename, name=None, category='default'):
         content_type=role_ct,
         codename=codename,
         defaults=defaults)
-    if created:
-        PermissionGroup.objects.create(permission=permission, name=category)
-
+    PermissionGroup.objects.get_or_create(permission=permission,
+                                          defaults={'name': category})
     return permission
 
 

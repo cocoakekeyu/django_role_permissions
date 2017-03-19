@@ -30,24 +30,6 @@ class AbstractRoleMetaclass(type):
 @add_metaclass(AbstractRoleMetaclass)
 class AbstractRole(object):
 
-    # def __new__(cls, *args, **kwargs):
-    #     try:
-    #         role = cls.get_registered_role()
-    #     except RoleDoesNotRegister:
-    #         if hasattr(cls, 'name'):
-    #             name = cls.name
-    #         else:
-    #             name = cls.__name__
-    #         extra = {}
-    #         if hasattr(cls, 'permissions'):
-    #             permissions = get_or_create_permissions(cls.permissions)
-    #             extra['permissions'] = permissions
-
-    #         role = get_role_model().objects.create(name=name, **extra)
-    #         registered_roles[cls.__name__] = role
-
-    #     return role
-
     @classmethod
     def get_registered_role(cls):
         name = cls.__name__

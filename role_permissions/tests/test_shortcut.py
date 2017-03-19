@@ -36,7 +36,7 @@ class AssignRole(TestCase):
     def setUp(self):
         self.user = mommy.make(get_user_model())
 
-    def test_add_role(self):
+    def _test_add_role(self):
         user = self.user
         print(user.username)
         add_role(user, Role1)
